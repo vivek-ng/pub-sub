@@ -34,3 +34,15 @@ func (pb *PubSub) Subscribe(topic string) DataChan {
 	}
 	return ch
 }
+
+func (pb *PubSub) Publish(topic string, message interface{}) {
+	pb.mux.RLock()
+	defer pb.mux.RUnlock()
+	dt := Data{
+		Message: message,
+	}
+
+	for _, subs := range pb.subscribers[topic] {
+		subs <- dt
+	}
+}
