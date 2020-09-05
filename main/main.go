@@ -1,29 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/vivek-ng/pub-sub/publisher"
 	"github.com/vivek-ng/pub-sub/pubsub"
+	"github.com/vivek-ng/pub-sub/subscriber"
 )
 
 func main() {
-	pb := pubsub.NewPubSub(5)
-	ch1 := pb.Subscribe("test")
+	pb := pubsub.NewPubSub(5000)
+	pub := publisher.NewPublisher(pb)
+	sub := subscriber.NewSubscriber(pb)
 	go func() {
-		//for {
-		pb.Publish("test", "vivek is awesome!")
-		//}
+		time.Sleep(10 * time.Second)
+		pb.Close()
 	}()
-
-	go func() {
-		for val := range ch1 {
-			fmt.Println(val)
-		}
-		fmt.Println("channel closed !!")
-	}()
-	time.Sleep(3 * time.Second)
-	pb.Close()
-	time.Sleep(10 * time.Second)
+	go sub.Subscribe()
+	go pub.Publish()
+	time.Sleep(30 * time.Second)
 
 }
