@@ -17,9 +17,6 @@ func NewSubscriber(pb *pubsub.PubSub) *Subscriber {
 }
 
 func (s *Subscriber) Subscribe() {
-	// for i := 0; i < 500; i++ {
-	// 	s.pubsub.Publish("topic1", "i love pizza")
-	// }
 	ch := s.pubsub.Subscribe("topic1")
 	count := 0
 	for val := range ch {
