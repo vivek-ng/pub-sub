@@ -18,17 +18,18 @@ type (
 
 func NewPubSub(capacity int) *PubSub {
 	return &PubSub{
-		capacity: capacity,
+		capacity:    capacity,
+		subscribers: map[string][]DataChan{},
 	}
 }
 
 func (pb *PubSub) Subscribe(topic string) DataChan {
 	pb.mux.Lock()
 	defer pb.mux.Unlock()
-	ch := make(DataChan)
-	_, ok := pb.subscribers[topic]
+	ch := make(DataChan, pb.capacity)
+	tp, ok := pb.subscribers[topic]
 	if ok {
-		pb.subscribers[topic] = append(pb.subscribers[topic], ch)
+		pb.subscribers[topic] = append(tp, ch)
 	} else {
 		pb.subscribers[topic] = append([]DataChan{}, ch)
 	}
@@ -41,8 +42,9 @@ func (pb *PubSub) Publish(topic string, message interface{}) {
 	dt := Data{
 		Message: message,
 	}
-
-	for _, subs := range pb.subscribers[topic] {
-		subs <- dt
+	for _, sub := range pb.subscribers[topic] {
+		go func(data Data, sub DataChan) {
+			sub <- dt
+		}(dt, sub)
 	}
 }
