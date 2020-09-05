@@ -17,14 +17,13 @@ func main() {
 	}()
 
 	go func() {
-		for {
-			select {
-			case d := <-ch1:
-				go func(data interface{}) {
-					fmt.Println(data)
-				}(d)
-			}
+		for val := range ch1 {
+			fmt.Println(val)
 		}
+		fmt.Println("channel closed !!")
 	}()
+	time.Sleep(3 * time.Second)
+	pb.Close()
 	time.Sleep(10 * time.Second)
+
 }

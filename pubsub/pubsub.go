@@ -13,6 +13,8 @@ type (
 		capacity    int
 		subscribers map[string][]DataChan
 		mux         sync.RWMutex
+		once        sync.Once
+		closed      bool
 	}
 )
 
@@ -39,6 +41,9 @@ func (pb *PubSub) Subscribe(topic string) DataChan {
 func (pb *PubSub) Publish(topic string, message interface{}) {
 	pb.mux.RLock()
 	defer pb.mux.RUnlock()
+	if pb.closed {
+		return
+	}
 	dt := Data{
 		Message: message,
 	}
@@ -47,4 +52,17 @@ func (pb *PubSub) Publish(topic string, message interface{}) {
 			sub <- dt
 		}(dt, sub)
 	}
+}
+
+func (pb *PubSub) Close() {
+	pb.mux.Lock()
+	defer pb.mux.Unlock()
+	pb.once.Do(func() {
+		pb.closed = true
+		for _, v := range pb.subscribers {
+			for _, ch := range v {
+				close(ch)
+			}
+		}
+	})
 }
